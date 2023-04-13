@@ -7,10 +7,10 @@ const val rows = 9
 const val columns = 9
 const val WR_INP = "Wrong input!"
 
-var mines = Array(rows) { Array(columns) { false } }
-var nums = Array(rows) { Array(columns) { -1 } }
-var guess = Array(rows) { Array(columns) { false } }
-var explored = Array(rows) { Array(columns) { false } }
+var mines = Array(rows) { Array(columns) { false } } // mines
+var nums = Array(rows) { Array(columns) { 0 } } // numbers of mines nearby
+var guess = Array(rows) { Array(columns) { false } } // user's guesses of mines
+var explored = Array(rows) { Array(columns) { false } } // opened cells
 
 var numMines = 0
 
@@ -30,7 +30,7 @@ fun main() {
     }
 
     // filling
-    fillField()
+    // fillField()
 
     // printing
     printField(false)
@@ -76,17 +76,11 @@ fun play() {
         when (inp[2]) {
             "mine" -> mark(row, col)
             "free" -> {
+                if (isFirstMove) fillField(row, col)
                 if (explore(row, col)) {
-                    if (isFirstMove) {
-                        do {
-                            fillField()
-                        } while(explore(row, col))
-                    }
-                    else {
-                        printField(true)
-                        println("You stepped on a mine and failed!")
-                        break
-                    }
+                    printField(true)
+                    println("You stepped on a mine and failed!")
+                    break
                 }
             }
             else -> {
@@ -151,13 +145,15 @@ fun isFinished(): Boolean {
     return isNothingUnexploredLeft
 }
 
-private fun fillField() {
+private fun fillField(row: Int, col: Int) {
+    val numbers = MutableList(rows * columns) { i -> i }
+    numbers.removeAt(row * columns + col)
+
+    // filling field with mines
     for (i in 0 until numMines) {
-        var rngPosition: Int
-        do {
-            rngPosition = Random.nextInt(rows * columns)
-        } while (mines[rngPosition / columns][rngPosition % columns])
-        mines[rngPosition / columns][rngPosition % columns] = true
+        val rng = Random.Default.nextInt(rows * columns - 1 - i)
+        mines[numbers[rng] / columns][numbers[rng] % columns] = true
+        numbers.removeAt(rng)
     }
 
     // calculating numbers of mines around
